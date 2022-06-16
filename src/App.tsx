@@ -1,26 +1,85 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import {useEffect, useState } from 'react';
+import { Dashboard } from './components/Dashboard';
+import { Header } from './components/Header/index';
+import { Modal } from './components/Modal/index';
+import {Container, GlobalStyle} from './Global/styles';
+import { api } from './services/api';
 
-function App() {
+interface Listas {
+  id:number;
+  autor:string;
+  text: string;
+};
+
+interface createFraseProps{
+autor: string;
+frase: string;
+}
+
+
+
+export function App() {
+
+  const [listas, setListas] = useState<Listas[]>([]);
+
+  const [autor, setAutor] = useState('');
+  
+
+  useEffect(() => {
+    api.get('/listas').then(response => setListas(response.data.lista));
+  }, []);
+
+  const [state, setState] = useState('close');
+
+  function handleOpenModal(){
+    setState('open');
+  }
+  function handleCloseModal(){
+    setState('close')
+  }
+  function handleCrateFrase({autor, frase}: createFraseProps){
+
+  if(autor.length === 0 || frase.length === 0){
+    alert('Prencha todos os campos');
+  }else{
+    setState('close')
+
+   const ids = listas.map(lista => lista.id);
+   const ultimoid = ids[ids.length - 1];
+   console.log(ultimoid);
+
+    const data = {
+    id: Number(ultimoid) + 1,
+    autor: autor,
+    text: frase
+    }
+
+    setListas([...listas, data]);
+  }
+  }
+
+  function search(x: string){
+    setAutor(x);
+  }
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+  <>
+  <Container>
+  <Header handleOpenModal={handleOpenModal} search={search} />
+
+
+  <Dashboard Lista={listas} Autor={autor} />
+
+  <Modal 
+  state={state} 
+  handleCloseModal={handleCloseModal}
+  handleCrateFrase={handleCrateFrase}
+  />
+
+  <GlobalStyle/>
+  </Container>
+  </>
   );
 }
 
-export default App;
+
